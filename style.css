@@ -1,0 +1,314 @@
+/* Purpose: Style the crochet pattern visualizer and its controls. */
+
+#crochetApp {
+  --crochet-border: #cbdcf0;
+  --crochet-heading: #122444;
+  --crochet-muted: #526783;
+  --crochet-surface: #ffffff;
+
+  color: var(--crochet-heading);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+#crochetApp *,
+#crochetApp *::before,
+#crochetApp *::after {
+  box-sizing: border-box;
+}
+
+#crochetApp .crochet-header {
+  margin-bottom: 24px;
+}
+
+#crochetApp .crochet-header h1 {
+  font-size: 30px;
+  margin: 0 0 4px;
+  color: var(--crochet-heading);
+}
+
+#crochetApp .crochet-header p {
+  margin: 0;
+  color: var(--crochet-muted);
+}
+
+#crochetApp .crochet-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+#crochetApp .crochet-panel,
+#crochetApp .crochet-subpanel {
+  min-width: 0;
+  background: var(--crochet-surface);
+  border: 1px solid var(--crochet-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#crochetApp .crochet-panel > h2 {
+  font-size: 21px;
+  margin: 0;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--crochet-border);
+  background: #f4f8fd;
+}
+
+#crochetApp .crochet-preview {
+  padding: 20px;
+  min-height: 500px;
+  overflow-wrap: anywhere;
+}
+
+#crochetApp .crochet-preview p {
+  margin: 0 0 22px;
+}
+
+#crochetApp .crochet-preview .preview-placeholder {
+  color: #78869a;
+  font-style: italic;
+}
+
+#crochetApp .crochet-preview .crochet-line {
+  white-space: pre-wrap;
+  margin-bottom: 22px;
+}
+
+#crochetApp .crochet-controls {
+  padding-bottom: 14px;
+}
+
+#crochetApp .crochet-controls > h2 {
+  background: transparent;
+  border-bottom: 0;
+  padding-bottom: 8px;
+}
+
+#crochetApp textarea {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 0 16px;
+  padding: 12px;
+  border: 1px solid var(--crochet-border);
+  border-radius: 6px;
+  font: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  color: var(--crochet-heading);
+  background: white;
+}
+
+#crochetApp button,
+#crochetApp select {
+  font: inherit;
+}
+
+#crochetApp button {
+  padding: 8px 12px;
+  border: 1px solid var(--crochet-border);
+  border-radius: 6px;
+  background: white;
+  color: var(--crochet-heading);
+  cursor: pointer;
+}
+
+#crochetApp button:hover {
+  background: #eef5ff;
+}
+
+#crochetApp button:focus-visible,
+#crochetApp select:focus-visible,
+#crochetApp input:focus-visible,
+#crochetApp textarea:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+#crochetApp .crochet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 16px 18px;
+}
+
+#crochetApp .crochet-actions .primary-button {
+  margin-left: auto;
+  color: white;
+  background: #2874ee;
+  border-color: #2874ee;
+}
+
+#crochetApp .crochet-actions .primary-button:hover {
+  background: #165bc7;
+}
+
+#crochetApp .crochet-subpanel {
+  margin: 0 16px 14px;
+  width: calc(100% - 32px);
+  padding: 14px;
+}
+
+#crochetApp .subpanel-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+#crochetApp .crochet-subpanel h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+#crochetApp .subpanel-heading button {
+  font-size: 14px;
+  color: #2563eb;
+}
+
+#crochetApp .crochet-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+
+#crochetApp .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+#crochetApp .legend-swatch {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border-radius: 6px;
+}
+
+#crochetApp .legend-abbreviation {
+  font-weight: bold;
+  min-width: 30px;
+}
+
+#crochetApp .legend-description {
+  color: var(--crochet-muted);
+}
+
+#crochetApp .color-settings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#crochetApp .color-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+}
+
+#crochetApp .color-setting input[type="color"] {
+  width: 38px;
+  height: 30px;
+  padding: 2px;
+  cursor: pointer;
+}
+
+#crochetApp #crochetColorSettings p {
+  color: var(--crochet-muted);
+  font-size: 14px;
+}
+
+#crochetApp #crochetResetColors {
+  margin-top: 12px;
+}
+
+#crochetApp .display-options h3 {
+  margin-bottom: 12px;
+}
+
+#crochetApp .option-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+#crochetApp .option-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #2874ee;
+}
+
+#crochetApp .option-row select {
+  max-width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--crochet-border);
+  border-radius: 5px;
+  background: white;
+}
+
+#crochetApp .stitch {
+  border-radius: 8px;
+  padding: 2px 6px;
+  font-weight: 700;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+#crochetApp .stitch.text-only {
+  background: transparent !important;
+}
+
+#crochetApp .stitch.highlight-only {
+  color: #152238 !important;
+}
+
+#crochetApp .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 900px) {
+  #crochetApp .crochet-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #crochetApp .crochet-preview {
+    min-height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  #crochetApp .crochet-header h1 {
+    font-size: 24px;
+  }
+
+  #crochetApp .crochet-legend,
+  #crochetApp .color-settings {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #crochetApp .crochet-actions .primary-button {
+    margin-left: 0;
+  }
+}

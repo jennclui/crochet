@@ -1,0 +1,96 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div id="crochetApp">
+        <header class="crochet-header">
+            <h1>Crochet Pattern Color Coder</h1>
+            <p>Paste your pattern instructions on the right and see a
+                color-coded version on the left.</p>
+        </header>
+
+        <main class="crochet-layout">
+
+            <!-- Left: Color-coded preview -->
+            <section class="crochet-panel">
+                <h2>Color-Coded Preview</h2>
+                <div id="crochetPreview" class="crochet-preview" aria-live="polite">
+                    <p class="preview-placeholder">
+                        Your color-coded instructions will appear here.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Right: Input and controls -->
+            <section class="crochet-panel crochet-controls">
+                <h2>Pattern Input</h2>
+
+                <label for="crochetInput" class="visually-hidden">
+                    Paste crochet pattern instructions
+                </label>
+
+                <textarea id="crochetInput" rows="10" placeholder="Paste your crochet pattern here..."></textarea>
+
+                <div class="crochet-actions">
+                    <button type="button" id="crochetExample">
+                        Paste Example
+                    </button>
+                    <button type="button" id="crochetClear">
+                        Clear
+                    </button>
+                    <button type="button" id="crochetUpdate" class="primary-button">
+                        Update Preview
+                    </button>
+                </div>
+
+                <!-- Stitch color legend -->
+                <section class="crochet-subpanel">
+                    <div class="subpanel-heading">
+                        <h3>Stitch Color Legend</h3>
+                        <button type="button" id="crochetCustomize">
+                            Customize Colors
+                        </button>
+                    </div>
+
+                    <div id="crochetLegend" class="crochet-legend"></div>
+
+                    <div id="crochetColorSettings" hidden>
+                        <p>Choose a color for each stitch type.</p>
+                        <div id="crochetColorInputs" class="color-settings"></div>
+                        <button type="button" id="crochetResetColors">
+                            Reset Colors
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Display options -->
+                <section class="crochet-subpanel display-options">
+                    <h3>Display Options</h3>
+
+                    <label class="option-row">
+                        <span>Background highlight</span>
+                        <input type="checkbox" id="crochetHighlight" checked>
+                    </label>
+
+                    <label class="option-row">
+                        <span>Stitch text style</span>
+                        <select id="crochetTextStyle">
+                            <option value="both">Text + Highlight</option>
+                            <option value="text">Colored Text Only</option>
+                            <option value="highlight">Highlight Only</option>
+                        </select>
+                    </label>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
