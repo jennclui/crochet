@@ -1,10 +1,14 @@
-/* Purpose: Style the crochet pattern visualizer and its controls. */
+
+/* Purpose: Style the crochet pattern visualizer. */
+
+/* General layout */
 
 #crochetApp {
   --crochet-border: #cbdcf0;
   --crochet-heading: #122444;
   --crochet-muted: #526783;
   --crochet-surface: #ffffff;
+  --crochet-accent: #2874ee;
 
   color: var(--crochet-heading);
   font-family: Arial, Helvetica, sans-serif;
@@ -26,7 +30,8 @@
 
 #crochetApp .crochet-header h1 {
   font-size: 30px;
-  margin: 0 0 4px;
+  line-height: 1.25;
+  margin: 0 0 8px;
   color: var(--crochet-heading);
 }
 
@@ -59,26 +64,6 @@
   background: #f4f8fd;
 }
 
-#crochetApp .crochet-preview {
-  padding: 20px;
-  min-height: 500px;
-  overflow-wrap: anywhere;
-}
-
-#crochetApp .crochet-preview p {
-  margin: 0 0 22px;
-}
-
-#crochetApp .crochet-preview .preview-placeholder {
-  color: #78869a;
-  font-style: italic;
-}
-
-#crochetApp .crochet-preview .crochet-line {
-  white-space: pre-wrap;
-  margin-bottom: 22px;
-}
-
 #crochetApp .crochet-controls {
   padding-bottom: 14px;
 }
@@ -88,6 +73,109 @@
   border-bottom: 0;
   padding-bottom: 8px;
 }
+
+/* Preview */
+
+#crochetApp .crochet-preview {
+  padding: 20px;
+  min-height: 500px;
+  overflow-wrap: anywhere;
+}
+
+#crochetApp .preview-placeholder {
+  color: #78869a;
+  font-style: italic;
+  margin: 0;
+}
+
+#crochetApp .crochet-line {
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+#crochetApp .crochet-instruction {
+  padding: 5px 0;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* Round grouping */
+
+#crochetApp .crochet-round {
+  border: 1px solid #d8e3f0;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+#crochetApp .crochet-round-heading {
+  background: #eef4fc;
+  color: #17365e;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-bottom: 1px solid #d8e3f0;
+  text-transform: capitalize;
+}
+
+#crochetApp .crochet-round-body {
+  padding: 12px 14px;
+}
+
+#crochetApp .crochet-round-body >
+.crochet-instruction + .crochet-instruction {
+  border-top: 1px solid #edf1f6;
+}
+
+/* Repeat grouping */
+
+#crochetApp .crochet-repeat {
+  border-left: 4px solid #9061ed;
+  background: #f6f1ff;
+  border-radius: 5px;
+  margin: 8px 0;
+  padding: 8px 12px;
+  overflow-wrap: anywhere;
+}
+
+#crochetApp .crochet-repeat-label {
+  color: #7040c0;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+#crochetApp .crochet-repeat .crochet-instruction {
+  padding: 3px 0;
+}
+
+#crochetApp .crochet-repeat .crochet-instruction + .crochet-instruction {
+  border-top: 1px solid #e7dcfa;
+}
+
+/* Stitch highlighting */
+
+#crochetApp .stitch {
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-weight: 700;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+#crochetApp .stitch.text-only {
+  background: transparent !important;
+}
+
+#crochetApp .stitch.highlight-only {
+  color: #152238 !important;
+}
+
+/* Pattern input */
 
 #crochetApp textarea {
   display: block;
@@ -139,13 +227,15 @@
 #crochetApp .crochet-actions .primary-button {
   margin-left: auto;
   color: white;
-  background: #2874ee;
-  border-color: #2874ee;
+  background: var(--crochet-accent);
+  border-color: var(--crochet-accent);
 }
 
 #crochetApp .crochet-actions .primary-button:hover {
   background: #165bc7;
 }
+
+/* Legend and settings */
 
 #crochetApp .crochet-subpanel {
   margin: 0 16px 14px;
@@ -249,7 +339,7 @@
 #crochetApp .option-row input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  accent-color: #2874ee;
+  accent-color: var(--crochet-accent);
 }
 
 #crochetApp .option-row select {
@@ -260,20 +350,8 @@
   background: white;
 }
 
-#crochetApp .stitch {
-  border-radius: 8px;
-  padding: 2px 6px;
-  font-weight: 700;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}
-
-#crochetApp .stitch.text-only {
-  background: transparent !important;
-}
-
-#crochetApp .stitch.highlight-only {
-  color: #152238 !important;
+#crochetApp [hidden] {
+  display: none !important;
 }
 
 #crochetApp .visually-hidden {
@@ -287,6 +365,8 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* Responsive layout */
 
 @media (max-width: 900px) {
   #crochetApp .crochet-layout {
