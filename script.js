@@ -1,10 +1,10 @@
-/* Purpose: Color-code crochet stitch terms while preserving the pattern text. */
+
+/* Purpose: Color-code crochet stitches and their associated counts. */
 
 (function () {
   "use strict";
 
   const app = document.getElementById("crochetApp");
-
   if (!app) return;
 
   const input = app.querySelector("#crochetInput");
@@ -20,8 +20,11 @@
   const highlightToggle = app.querySelector("#crochetHighlight");
   const textStyle = app.querySelector("#crochetTextStyle");
 
-  // Stitch definitions and default colors.
-  // Add or remove entries here to customize the supported vocabulary.
+  // How it works:
+  // Stitch definitions control the abbreviations, descriptions, and colors.
+  // Stitch counts are included in the same highlight as their stitch type.
+  // Chain counts follow the abbreviation; other stitch counts precede it.
+
   const stitches = [
     {
       key: "ch",
@@ -42,11 +45,7 @@
       label: "hdc",
       description: "Half double crochet",
       color: "#f04468",
-      terms: [
-        "hdc",
-        "half double crochet",
-        "half double crochets"
-      ]
+      terms: ["hdc", "half double crochet", "half double crochets"]
     },
     {
       key: "dc",
@@ -83,9 +82,7 @@
       color: "#bf55e8",
       terms: [
         "sl st",
-        "sl sts",
         "slst",
-        "sl sts",
         "slip stitch",
         "slip stitches"
       ]
@@ -105,42 +102,35 @@
     originalColors[stitch.key] = stitch.color;
   });
 
-  // Render dynamic content as text or DOM nodes, never as pattern HTML.
-  // This keeps pasted instructions from being interpreted as markup.
   function escapeRegExp(value) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  function buildPatternMatcher() {
-    const terms = [];
+  // Match longer terms first to avoid matching abbreviations
+  // inside longer stitch names.
+  const termEntries = [];
 
-    stitches.forEach(function (stitch) {
-      stitch.terms.forEach(function (term) {
-        terms.push({
-          term: term,
-          stitch: stitch
-        });
+  stitches.forEach(function (stitch) {
+    stitch.terms.forEach(function (term) {
+      termEntries.push({
+        term: term,
+        stitch: stitch
       });
     });
+  });
 
-    // Match longer terms first so "single crochet" is matched before "sc".
-    terms.sort(function (a, b) {
-      return b.term.length - a.term.length;
-    });
+  termEntries.sort(function (a, b) {
+    return b.term.length - a.term.length;
+  });
 
-    const alternatives = terms.map(function (item) {
-      return escapeRegExp(item.term)
-        .replace(/\\ /g, "\\s+");
-    });
-
-    // Require word boundaries so "sc" won't match inside unrelated words.
-    return new RegExp(
-      "\\b(" + alternatives.join("|") + ")\\b",
-      "gi"
-    );
-  }
-
-  const patternMatcher = buildPatternMatcher();
+  const patternMatcher = new RegExp(
+    "\\b(?:" +
+      termEntries.map(function (entry) {
+        return escapeRegExp(entry.term).replace(/\\ /g, "\\s+");
+      }).join("|") +
+    ")\\b",
+    "gi"
+  );
 
   function findStitch(term) {
     const normalized = term.toLowerCase().replace(/\s+/g, " ");
@@ -152,17 +142,13 @@
     });
   }
 
-  function getStitchColor(stitch) {
-    return stitch.color;
-  }
-
   function hexToRgb(hex) {
-    const normalized = hex.replace("#", "");
+    const value = hex.replace("#", "");
 
     return {
-      r: parseInt(normalized.substring(0, 2), 16),
-      g: parseInt(normalized.substring(2, 4), 16),
-      b: parseInt(normalized.substring(4, 6), 16)
+      r: parseInt(value.substring(0, 2), 16),
+      g: parseInt(value.substring(2, 4), 16),
+      b: parseInt(value.substring(4, 6), 16)
     };
   }
 
@@ -170,6 +156,40 @@
     const rgb = hexToRgb(hex);
 
     return "rgba(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ", 0.17)";
+  }
+
+  // Determine the full range to highlight for each stitch.
+  function getHighlightRange(line, match, stitch, lastIndex) {
+    let start = match.index;
+    let end = match.index + match[0].length;
+
+    if (stitch.key === "ch") {
+      // Chains use the format Ch 5 or chain 5.
+      // Include the number immediately following the abbreviation.
+      const following = line.slice(end).match(/^(\s+\d+)\b/);
+
+      if (following) {
+        end += following[0].length;
+      }
+    } else {
+      // Other stitches usually use the format 16 dc or 2 sc.
+      // Include the number immediately before the stitch abbreviation.
+      const preceding = line.slice(0, start).match(/(\d+)\s+$/);
+
+      if (preceding) {
+        const numberStart = start - preceding[0].length;
+
+        // Do not overlap text already rendered.
+        if (numberStart >= lastIndex) {
+          start = numberStart;
+        }
+      }
+    }
+
+    return {
+      start: start,
+      end: end
+    };
   }
 
   function renderPreview() {
@@ -184,11 +204,11 @@
       placeholder.className = "preview-placeholder";
       placeholder.textContent =
         "Your color-coded instructions will appear here.";
+
       preview.appendChild(placeholder);
       return;
     }
 
-    // Split into lines so row spacing and line breaks are preserved.
     text.split("\n").forEach(function (line) {
       const lineElement = document.createElement("div");
       lineElement.className = "crochet-line";
@@ -199,43 +219,46 @@
       patternMatcher.lastIndex = 0;
 
       while ((match = patternMatcher.exec(line)) !== null) {
-        // Keep all original text before the matched stitch.
-        lineElement.appendChild(
-          document.createTextNode(line.slice(lastIndex, match.index))
+        const stitch = findStitch(match[0]);
+        if (!stitch) continue;
+
+        const range = getHighlightRange(
+          line,
+          match,
+          stitch,
+          lastIndex
         );
 
-        const stitch = findStitch(match[0]);
+        // Skip overlapping matches.
+        if (range.start < lastIndex) continue;
 
-        if (stitch) {
-          const span = document.createElement("span");
-          span.className = "stitch";
+        // Preserve all original text before the highlighted section.
+        lineElement.appendChild(
+          document.createTextNode(line.slice(lastIndex, range.start))
+        );
 
-          span.textContent = match[0];
+        const span = document.createElement("span");
+        span.className = "stitch";
+        span.textContent = line.slice(range.start, range.end);
 
-          const color = getStitchColor(stitch);
-          span.style.color = color;
+        const color = stitch.color;
+        span.style.color = color;
 
-          if (useHighlight && style !== "text") {
-            span.style.backgroundColor = getHighlightColor(color);
-          }
-
-          if (style === "text") {
-            span.classList.add("text-only");
-          } else if (style === "highlight") {
-            span.classList.add("highlight-only");
-          }
-
-          lineElement.appendChild(span);
-        } else {
-          lineElement.appendChild(
-            document.createTextNode(match[0])
-          );
+        if (useHighlight && style !== "text") {
+          span.style.backgroundColor = getHighlightColor(color);
         }
 
-        lastIndex = match.index + match[0].length;
+        if (style === "text") {
+          span.classList.add("text-only");
+        } else if (style === "highlight") {
+          span.classList.add("highlight-only");
+        }
+
+        lineElement.appendChild(span);
+        lastIndex = range.end;
       }
 
-      // Preserve all remaining punctuation, numbers, and wording.
+      // Preserve remaining wording, punctuation, and stitch counts.
       lineElement.appendChild(
         document.createTextNode(line.slice(lastIndex))
       );
@@ -276,16 +299,13 @@
       const label = document.createElement("label");
       label.className = "color-setting";
 
-      const text = document.createElement("span");
-      text.textContent = stitch.label + " (" + stitch.description + ")";
+      const name = document.createElement("span");
+      name.textContent = stitch.label + " (" + stitch.description + ")";
 
       const picker = document.createElement("input");
       picker.type = "color";
       picker.value = stitch.color;
-      picker.setAttribute(
-        "aria-label",
-        "Color for " + stitch.description
-      );
+      picker.setAttribute("aria-label", "Color for " + stitch.description);
 
       picker.addEventListener("input", function () {
         stitch.color = picker.value;
@@ -293,21 +313,19 @@
         renderPreview();
       });
 
-      label.append(text, picker);
+      label.append(name, picker);
       colorInputs.appendChild(label);
     });
   }
 
   const examplePattern = [
-    "Row 1: Ch 2, 6 sc in magic ring.",
-    "Row 2: Inc in each st (12).",
-    "Row 3: *Sc, inc* around (18).",
-    "Row 4: Ch 1, (2 sc, inc) x 6, sl st to join.",
-    "Row 5: Ch 3, dc in next st, dc in next st,",
-    "        (2 dc in next st) x 5, sl st to join.",
-    "Row 6: Ch 2, hdc in each st around, sl st to join.",
-    "Row 7: Ch 1, (hdc, dc, hdc) in next st,",
-    "        (hdc, dc, hdc) x 6, sl st to join.",
+    "Row 1: Ch 5, 6 sc in magic ring.",
+    "Row 2: 2 sc in each st (12).",
+    "Row 3: *1 sc, 1 inc* around (18).",
+    "Row 4: Ch 1, 2 sc, 1 inc x 6, sl st to join.",
+    "Row 5: Ch 3, 16 dc in next round.",
+    "Row 6: Ch 2, 12 hdc in each st around, sl st to join.",
+    "Row 7: Ch 1, 3 dc in next st, 2 sc in next st.",
     "Row 8: Ch 1, sc in each st around, sl st to join."
   ].join("\n");
 
@@ -348,8 +366,6 @@
 
   highlightToggle.addEventListener("change", renderPreview);
   textStyle.addEventListener("change", renderPreview);
-
-  // Update as the user types or pastes new instructions.
   input.addEventListener("input", renderPreview);
 
   renderLegend();
