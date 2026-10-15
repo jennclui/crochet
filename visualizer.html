@@ -1,0 +1,450 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crochet Pattern Visualizer</title>
+
+<style>
+/* How it works: Define the colours used for each stitch type and instruction group. */
+:root {
+    --group-grey: #e8e8e8;
+    --sc-color: #d8eaff;
+    --hdc-color: #d9f0df;
+    --dc-color: #ffe6b8;
+    --tr-color: #eadcff;
+    --dtr-color: #ffdce2;
+    --sl-st-color: #d9f3f0;
+    --ch-color: #fff2a8;
+    --default-color: #f3f3f3;
+    --border-color: #d5d5d5;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 0 20px;
+    color: #292929;
+    line-height: 1.6;
+}
+
+h1 {
+    margin-bottom: 8px;
+}
+
+.description {
+    color: #555;
+    margin-bottom: 24px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 140px;
+    padding: 14px;
+    font-family: monospace;
+    font-size: 15px;
+    line-height: 1.7;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    resize: vertical;
+}
+
+button {
+    margin: 12px 0 24px;
+    padding: 10px 18px;
+    border: 0;
+    border-radius: 5px;
+    background: #333;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #555;
+}
+
+.preview {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    background: #fff;
+}
+
+.preview h2 {
+    font-size: 20px;
+    margin: 0 0 16px;
+}
+
+/* Each comma-separated instruction gets its own visual group. */
+.instruction {
+    display: block;
+    margin: 0 0 10px;
+    padding: 10px 12px;
+    border: 1px solid #ededed;
+    border-radius: 5px;
+    background: #fff;
+    overflow-wrap: anywhere;
+}
+
+/* Bracketed groups receive a neutral grey background. */
+.bracket-group {
+    background: var(--group-grey);
+    border-radius: 4px;
+    padding: 3px 5px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Highlight the count and stitch abbreviation together. */
+.stitch {
+    display: inline;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-weight: bold;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+.st-sc  { background: var(--sc-color); }
+.st-hdc { background: var(--hdc-color); }
+.st-dc  { background: var(--dc-color); }
+.st-tr  { background: var(--tr-color); }
+.st-dtr { background: var(--dtr-color); }
+.st-sl  { background: var(--sl-st-color); }
+.st-ch  { background: var(--ch-color); }
+
+.stitch-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.legend-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+}
+
+.legend-group { background: var(--group-grey); }
+.legend-sc { background: var(--sc-color); }
+.legend-hdc { background: var(--hdc-color); }
+.legend-dc { background: var(--dc-color); }
+.legend-tr { background: var(--tr-color); }
+.legend-dtr { background: var(--dtr-color); }
+.legend-sl { background: var(--sl-st-color); }
+.legend-ch { background: var(--ch-color); }
+
+@media (max-width: 600px) {
+    body {
+        margin: 15px auto;
+        padding: 0 12px;
+    }
+
+    .preview {
+        padding: 12px;
+    }
+
+    .instruction {
+        padding: 9px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<h1>Crochet Pattern Visualizer</h1>
+
+<p class="description">
+    Paste a crochet pattern below. Stitch types will be colour-coded,
+    square-bracketed groups will be highlighted in grey, and instructions
+    separated by commas will appear on separate lines.
+</p>
+
+<label for="patternInput">Crochet pattern</label>
+
+<textarea id="patternInput" spellcheck="false">[3 dc] in ch-3 sp, 3 tr in next dc, 16 dc in next round, 2 sc in next st, sl st to join</textarea>
+
+<button type="button" id="resetPattern">Reset example</button>
+
+<section class="preview" aria-live="polite">
+    <h2>Formatted pattern</h2>
+    <div id="patternOutput"></div>
+</section>
+
+<div class="stitch-legend" aria-label="Stitch colour legend">
+    <span class="legend-item">
+        <span class="legend-swatch legend-group"></span>Bracket group
+    </span>
+    <span class="legend-item">
+        <span class="legend-swatch legend-sc"></span>SC
+    </span>
+    <span class="legend-item">
+        <span class="legend-swatch legend-hdc"></span>HDC
+    </span>
+    <span class="legend-item">
+        <span class="legend-swatch legend-dc"></span>DC
+    </span>
+    <span class="legend-item">
+        <span class="legend-swatch legend-tr"></span>TR
+    </span>
+    <span class="legend-item">
+        <span class="legend-swatch legend-dtr"></span>DTR
+    </span>
+    <span class="legend-item">
+        <span class="legend-swatch legend-sl"></span>SL ST
+    </span>
+    <span class="legend-item">
+        <span class="legend-swatch legend-ch"></span>CH
+    </span>
+</div>
+
+<script>
+/*
+Purpose: Convert plain crochet instructions into a colour-coded,
+readable pattern preview.
+
+How it works:
+1. Split instructions at commas that are outside square brackets.
+2. Hide square brackets and highlight their contents in grey.
+3. Detect stitch abbreviations and their associated stitch counts.
+4. Render the formatted instructions safely using DOM elements.
+*/
+
+const patternInput = document.getElementById("patternInput");
+const patternOutput = document.getElementById("patternOutput");
+const resetButton = document.getElementById("resetPattern");
+
+const examplePattern =
+    "[3 dc] in ch-3 sp, 3 tr in next dc, 16 dc in next round, 2 sc in next st, sl st to join";
+
+/* Match longer stitch abbreviations before shorter ones. */
+const stitchTypes = [
+    {
+        name: "dtr",
+        pattern: "dtr",
+        className: "st-dtr"
+    },
+    {
+        name: "tr",
+        pattern: "tr",
+        className: "st-tr"
+    },
+    {
+        name: "hdc",
+        pattern: "hdc",
+        className: "st-hdc"
+    },
+    {
+        name: "dc",
+        pattern: "dc",
+        className: "st-dc"
+    },
+    {
+        name: "sc",
+        pattern: "sc",
+        className: "st-sc"
+    },
+    {
+        name: "sl st",
+        pattern: "sl\\s*st",
+        className: "st-sl"
+    },
+    {
+        name: "ch",
+        pattern: "ch",
+        className: "st-ch"
+    }
+];
+
+/* Split at commas only when outside square-bracketed groups. */
+function splitInstructions(text) {
+    const instructions = [];
+    let current = "";
+    let bracketDepth = 0;
+
+    for (const character of text) {
+        if (character === "[") {
+            bracketDepth++;
+            current += character;
+        } else if (character === "]") {
+            bracketDepth = Math.max(0, bracketDepth - 1);
+            current += character;
+        } else if (character === "," && bracketDepth === 0) {
+            if (current.trim()) {
+                instructions.push(current.trim());
+            }
+            current = "";
+        } else {
+            current += character;
+        }
+    }
+
+    if (current.trim()) {
+        instructions.push(current.trim());
+    }
+
+    return instructions;
+}
+
+/* Find the stitch abbreviation associated with each stitch count. */
+function getStitchRegex() {
+    const alternatives = stitchTypes
+        .map(stitch => stitch.pattern)
+        .join("|");
+
+    return new RegExp(
+        "(\\d+)\\s+(" + alternatives + ")(?![a-z])",
+        "gi"
+    );
+}
+
+/* Return the appropriate CSS class for a matched stitch. */
+function getStitchClass(abbreviation) {
+    const normalized = abbreviation
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+
+    const stitch = stitchTypes.find(item => {
+        const regex = new RegExp(
+            "^" + item.pattern + "$",
+            "i"
+        );
+        return regex.test(normalized);
+    });
+
+    return stitch ? stitch.className : "";
+}
+
+/*
+Render text in segments. Text nodes are used instead of inserting
+pattern text as HTML, preventing pasted instructions from becoming markup.
+*/
+function renderHighlightedText(container, text) {
+    const regex = getStitchRegex();
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            container.appendChild(
+                document.createTextNode(
+                    text.slice(lastIndex, match.index)
+                )
+            );
+        }
+
+        const stitch = document.createElement("span");
+        stitch.className =
+            "stitch " + getStitchClass(match[2]);
+
+        stitch.textContent = match[0];
+        container.appendChild(stitch);
+
+        lastIndex = regex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+        container.appendChild(
+            document.createTextNode(text.slice(lastIndex))
+        );
+    }
+}
+
+/* Hide brackets and apply grey highlighting to their contents. */
+function renderInstruction(container, instruction) {
+    let position = 0;
+
+    while (position < instruction.length) {
+        const openIndex = instruction.indexOf("[", position);
+
+        if (openIndex === -1) {
+            renderHighlightedText(
+                container,
+                instruction.slice(position)
+            );
+            break;
+        }
+
+        renderHighlightedText(
+            container,
+            instruction.slice(position, openIndex)
+        );
+
+        let depth = 1;
+        let closeIndex = openIndex + 1;
+
+        while (closeIndex < instruction.length && depth > 0) {
+            if (instruction[closeIndex] === "[") depth++;
+            if (instruction[closeIndex] === "]") depth--;
+            closeIndex++;
+        }
+
+        const hasClosingBracket = depth === 0;
+        const groupEnd = hasClosingBracket
+            ? closeIndex - 1
+            : instruction.length;
+
+        const group = document.createElement("span");
+        group.className = "bracket-group";
+
+        renderHighlightedText(
+            group,
+            instruction.slice(openIndex + 1, groupEnd)
+        );
+
+        container.appendChild(group);
+
+        position = hasClosingBracket
+            ? closeIndex
+            : instruction.length;
+    }
+}
+
+/* Rebuild the preview whenever the input changes. */
+function updatePreview() {
+    patternOutput.replaceChildren();
+
+    const instructions = splitInstructions(patternInput.value);
+
+    instructions.forEach(instruction => {
+        const line = document.createElement("div");
+        line.className = "instruction";
+
+        renderInstruction(line, instruction);
+
+        patternOutput.appendChild(line);
+    });
+}
+
+patternInput.addEventListener("input", updatePreview);
+
+resetButton.addEventListener("click", () => {
+    patternInput.value = examplePattern;
+    updatePreview();
+});
+
+updatePreview();
+</script>
+
+</body>
+</html>
