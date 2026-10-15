@@ -7,7 +7,7 @@
 <title>Crochet Pattern Visualizer</title>
 
 <style>
-/* How it works: Each stitch type has its own colour, while each instruction group has a grey background. */
+/* How it works: Grey instruction groups contain one colour-highlighted stitch. */
 :root {
     --group-grey: #e8e8e8;
     --sc-color: #d8eaff;
@@ -90,7 +90,7 @@ button:hover {
     margin: 0 0 20px;
 }
 
-/* Each comma-separated instruction becomes an inline grey group. */
+/* Each instruction stays inline with 20px spacing. */
 .instruction {
     display: inline;
     margin-right: 20px;
@@ -101,7 +101,7 @@ button:hover {
     -webkit-box-decoration-break: clone;
 }
 
-/* Highlight stitch counts and abbreviations. */
+/* Only the first stitch in each instruction receives this styling. */
 .stitch {
     display: inline;
     padding: 2px 4px;
@@ -181,8 +181,8 @@ button:hover {
 
 <p class="description">
     Paste a crochet pattern below. Each comma-separated instruction
-    appears in its own grey group, with stitch types and counts
-    highlighted in colour. Commas and square brackets are hidden.
+    appears in a grey group. Only the first stitch in each instruction
+    is highlighted. Commas and square brackets are hidden.
 </p>
 
 <label for="patternInput">Crochet pattern</label>
@@ -202,56 +202,43 @@ button:hover {
         Instruction group
     </span>
     <span class="legend-item">
-        <span class="legend-swatch legend-sc"></span>
-        SC
+        <span class="legend-swatch legend-sc"></span>SC
     </span>
     <span class="legend-item">
-        <span class="legend-swatch legend-hdc"></span>
-        HDC
+        <span class="legend-swatch legend-hdc"></span>HDC
     </span>
     <span class="legend-item">
-        <span class="legend-swatch legend-dc"></span>
-        DC
+        <span class="legend-swatch legend-dc"></span>DC
     </span>
     <span class="legend-item">
-        <span class="legend-swatch legend-tr"></span>
-        TR
+        <span class="legend-swatch legend-tr"></span>TR
     </span>
     <span class="legend-item">
-        <span class="legend-swatch legend-dtr"></span>
-        DTR
+        <span class="legend-swatch legend-dtr"></span>DTR
     </span>
     <span class="legend-item">
-        <span class="legend-swatch legend-sl"></span>
-        SL ST
+        <span class="legend-swatch legend-sl"></span>SL ST
     </span>
     <span class="legend-item">
-        <span class="legend-swatch legend-ch"></span>
-        CH
+        <span class="legend-swatch legend-ch"></span>CH
     </span>
     <span class="legend-item">
-        <span class="legend-swatch legend-sk"></span>
-        SK
+        <span class="legend-swatch legend-sk"></span>SK
     </span>
     <span class="legend-item">
-        <span class="legend-swatch legend-cl"></span>
-        CL
+        <span class="legend-swatch legend-cl"></span>CL
     </span>
     <span class="legend-item">
-        <span class="legend-swatch legend-fptr"></span>
-        FPtr
+        <span class="legend-swatch legend-fptr"></span>FPtr
     </span>
     <span class="legend-item">
-        <span class="legend-swatch legend-tr2tog"></span>
-        tr2tog
+        <span class="legend-swatch legend-tr2tog"></span>tr2tog
     </span>
     <span class="legend-item">
-        <span class="legend-swatch legend-trcl"></span>
-        Treble clusters
+        <span class="legend-swatch legend-trcl"></span>Treble clusters
     </span>
     <span class="legend-item">
-        <span class="legend-swatch legend-rsc"></span>
-        RSC
+        <span class="legend-swatch legend-rsc"></span>RSC
     </span>
 </div>
 
@@ -262,9 +249,9 @@ Purpose: Format crochet patterns into inline, colour-coded instructions.
 How it works:
 1. Split instructions at commas outside square brackets.
 2. Hide commas and square brackets in the preview.
-3. Give each instruction a grey background and 20px spacing.
-4. Highlight recognized stitches, with or without a stitch count.
-5. Match longer stitch names before shorter abbreviations.
+3. Apply a grey background to each complete instruction.
+4. Highlight only the first recognized stitch in each instruction.
+5. Preserve the stitch count and abbreviation in the highlight.
 */
 
 const patternInput = document.getElementById("patternInput");
@@ -274,10 +261,7 @@ const resetButton = document.getElementById("resetPattern");
 const examplePattern =
     "[3 dc] in ch-3 sp, 3 tr in next dc, 16 dc in next round, 2 sc in next st, sl st to join, sk 2 st, cl, FPtr, FPtr join, tr2tog, tr2 cl, 3-tr cl, rsc";
 
-/*
-Stitch definitions are ordered from more specific to less specific.
-The regex is case-insensitive, so FPtr and fptr are both recognized.
-*/
+/* Match longer and more specific stitch names before shorter ones. */
 const stitchTypes = [
     {
         name: "3-tr cl",
@@ -356,10 +340,7 @@ const stitchTypes = [
     }
 ];
 
-/*
-Split the pattern at commas outside square brackets.
-Bracketed groups stay within the same instruction.
-*/
+/* Split instructions at commas outside square-bracket groups. */
 function splitInstructions(text) {
     const instructions = [];
     let current = "";
@@ -391,8 +372,8 @@ function splitInstructions(text) {
 }
 
 /*
-Build a regex that recognizes a stitch with an optional count.
-For example, it matches "3 dc", "dc", "sl st", and "FPtr join".
+Recognize a stitch abbreviation, optionally preceded by a count.
+Examples: "3 dc", "dc", "sl st", "FPtr join", "tr2tog".
 */
 function getStitchRegex() {
     const alternatives = stitchTypes
@@ -408,7 +389,7 @@ function getStitchRegex() {
     );
 }
 
-/* Find the CSS class for a matched stitch abbreviation. */
+/* Return the CSS class associated with a recognized stitch. */
 function getStitchClass(abbreviation) {
     const normalized = abbreviation
         .toLowerCase()
@@ -428,64 +409,81 @@ function getStitchClass(abbreviation) {
 }
 
 /*
-Highlight stitch abbreviations and their counts.
-Use text nodes for all unmatched text to prevent pasted HTML
-from being interpreted as markup.
+Render a text segment and highlight its first stitch if one has
+not already been highlighted in the current instruction.
+
+Returns true if a stitch has been highlighted in this segment
+or in a previous segment of the same instruction.
 */
-function renderHighlightedText(container, text) {
-    const regex = getStitchRegex();
-    let lastIndex = 0;
-    let match;
-
-    while ((match = regex.exec(text)) !== null) {
-        if (match.index > lastIndex) {
-            container.appendChild(
-                document.createTextNode(
-                    text.slice(lastIndex, match.index)
-                )
-            );
-        }
-
-        const stitch = document.createElement("span");
-        stitch.className =
-            "stitch " + getStitchClass(match[2]);
-
-        stitch.textContent = match[0];
-        container.appendChild(stitch);
-
-        lastIndex = regex.lastIndex;
+function renderHighlightedText(container, text, alreadyHighlighted) {
+    if (alreadyHighlighted || !text) {
+        container.appendChild(document.createTextNode(text));
+        return alreadyHighlighted;
     }
 
-    if (lastIndex < text.length) {
+    const regex = getStitchRegex();
+    const match = regex.exec(text);
+
+    /* No stitch found, so leave the text unchanged. */
+    if (!match) {
+        container.appendChild(document.createTextNode(text));
+        return false;
+    }
+
+    /* Add all text before the first stitch without highlighting it. */
+    if (match.index > 0) {
         container.appendChild(
-            document.createTextNode(text.slice(lastIndex))
+            document.createTextNode(text.slice(0, match.index))
         );
     }
+
+    /* Highlight the first stitch and its count, if present. */
+    const stitch = document.createElement("span");
+    stitch.className = "stitch " + getStitchClass(match[2]);
+    stitch.textContent = match[0];
+
+    container.appendChild(stitch);
+
+    /* Leave every following stitch in this segment unhighlighted. */
+    if (regex.lastIndex < text.length) {
+        container.appendChild(
+            document.createTextNode(text.slice(regex.lastIndex))
+        );
+    }
+
+    return true;
 }
 
 /*
-Hide square brackets while retaining their contents.
-Nested square-bracket groups are supported.
+Hide square brackets and preserve their contents.
+The first-stitch tracking is shared across the whole instruction,
+including text inside and outside brackets.
 */
 function renderInstruction(container, instruction) {
     let position = 0;
+    let firstStitchHighlighted = false;
 
     while (position < instruction.length) {
         const openIndex = instruction.indexOf("[", position);
 
+        /* No more bracket groups remain. */
         if (openIndex === -1) {
-            renderHighlightedText(
+            firstStitchHighlighted = renderHighlightedText(
                 container,
-                instruction.slice(position)
+                instruction.slice(position),
+                firstStitchHighlighted
             );
             break;
         }
 
-        renderHighlightedText(
+        /* Render text before the next opening bracket. */
+        firstStitchHighlighted = renderHighlightedText(
             container,
-            instruction.slice(position, openIndex)
+            instruction.slice(position, openIndex),
+            firstStitchHighlighted
         );
 
+        /* Find the matching closing bracket, supporting nesting. */
         let depth = 1;
         let closeIndex = openIndex + 1;
 
@@ -510,12 +508,12 @@ function renderInstruction(container, instruction) {
             ? closeIndex - 1
             : instruction.length;
 
-        const bracketContent = instruction.slice(
-            openIndex + 1,
-            groupEnd
+        /* Render bracket contents without showing the brackets. */
+        firstStitchHighlighted = renderHighlightedText(
+            container,
+            instruction.slice(openIndex + 1, groupEnd),
+            firstStitchHighlighted
         );
-
-        renderHighlightedText(container, bracketContent);
 
         position = hasClosingBracket
             ? closeIndex
@@ -523,10 +521,7 @@ function renderInstruction(container, instruction) {
     }
 }
 
-/*
-Render each instruction as a grey inline group.
-Commas are used for parsing but are not displayed.
-*/
+/* Render each instruction inline without displaying commas. */
 function updatePreview() {
     patternOutput.replaceChildren();
 
@@ -542,16 +537,16 @@ function updatePreview() {
     });
 }
 
-/* Refresh the preview when the user edits the pattern. */
+/* Refresh the preview whenever the pattern changes. */
 patternInput.addEventListener("input", updatePreview);
 
-/* Restore the sample pattern. */
+/* Restore the original example. */
 resetButton.addEventListener("click", () => {
     patternInput.value = examplePattern;
     updatePreview();
 });
 
-/* Display the initial preview. */
+/* Render the initial pattern. */
 updatePreview();
 </script>
 
